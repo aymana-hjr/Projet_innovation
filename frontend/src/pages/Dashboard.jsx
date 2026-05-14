@@ -10,7 +10,7 @@ import TaskForm from '../components/tasks/TaskForm';
 import StudySessionsList from '../components/tasks/StudySessionsList';
 import PlanningConfigModal from '../components/tasks/PlanningConfigModal';
 
-import { FiPlus, FiAlertCircle, FiLoader, FiLogOut, FiCalendar, FiCpu, FiSettings } from 'react-icons/fi';
+import { FiPlus, FiAlertCircle, FiLoader, FiLogOut, FiCalendar, FiCpu, FiSettings, FiUsers } from 'react-icons/fi';
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -214,7 +214,16 @@ export default function Dashboard() {
 
             {/* Action Section */}
             <div className="flex items-center gap-6">
-              {/* On peut ajouter des liens discrets ici si besoin */}
+              <button
+                onClick={() => navigate('/groups')}
+                className="group relative flex items-center gap-2 px-4 py-2 rounded-xl hover:bg-emerald-50 transition-colors"
+              >
+                <FiUsers className="relative w-4 h-4 text-emerald-600 group-hover:scale-110 transition-transform" />
+                <span className="relative text-sm font-bold text-emerald-700 hidden sm:block">
+                  Collaboration
+                </span>
+              </button>
+
               <div className="h-6 w-[1px] bg-slate-200 hidden sm:block"></div>
 
               <button

@@ -7,6 +7,6 @@ import lombok.Setter;
 @Getter
 @Setter
 public class InviteRequest {
-    @NotNull(message = "receiverUserId is required")
-    private Long receiverUserId;
+    @NotNull(message = "receiverCode is required")
+    private String receiverCode;
 }

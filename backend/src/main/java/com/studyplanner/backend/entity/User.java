@@ -5,6 +5,7 @@ import lombok.*;
 
 import java.time.LocalDateTime;
 import java.util.HashSet;
+import java.util.Random;
 import java.util.Set;
 
 @Entity
@@ -31,6 +32,21 @@ public class User {
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt = LocalDateTime.now();
 
+    @Column(name = "collaboration_code", unique = true, length = 8)
+    private String collaborationCode;
+
+    @PrePersist
+    protected void onCreate() {
+        if (this.collaborationCode == null) {
+            this.collaborationCode = generateRandomCode();
+        }
+    }
+
+    private String generateRandomCode() {
+        Random random = new Random();
+        int code = 10000000 + random.nextInt(90000000); // 8-digit random number
+        return String.valueOf(code);
+    }
 
     public Set<Role> getRoles() {
         return roles;
@@ -86,6 +102,14 @@ public class User {
 
     public void setId(Long id) {
         this.id = id;
+    }
+
+    public String getCollaborationCode() {
+        return collaborationCode;
+    }
+
+    public void setCollaborationCode(String collaborationCode) {
+        this.collaborationCode = collaborationCode;
     }
 
     @Builder.Default

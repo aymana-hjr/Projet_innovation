@@ -32,7 +32,7 @@ public class GroupController {
     public InvitationResponse invite(@PathVariable Long groupId,
                                      @Valid @RequestBody InviteRequest request,
                                      Principal principal) {
-        return groupService.inviteUser(principal.getName(), groupId, request.getReceiverUserId());
+        return groupService.inviteUser(principal.getName(), groupId, request.getReceiverCode());
     }
 
     @GetMapping("/invitations/pending")

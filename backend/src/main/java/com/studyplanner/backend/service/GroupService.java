@@ -56,11 +56,11 @@ public class GroupService {
                 .toList();
     }
 
-    public InvitationResponse inviteUser(String email, Long groupId, Long receiverUserId) {
+    public InvitationResponse inviteUser(String email, Long groupId, String receiverCode) {
         User sender = getUserByEmail(email);
         StudyGroup group = getGroupById(groupId);
-        User receiver = userRepository.findById(receiverUserId)
-                .orElseThrow(() -> new RuntimeException("Receiver not found"));
+        User receiver = userRepository.findByCollaborationCode(receiverCode)
+                .orElseThrow(() -> new RuntimeException("Receiver not found with this code"));
 
         ensureGroupMember(group, sender);
 
