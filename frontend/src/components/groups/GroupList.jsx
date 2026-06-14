@@ -69,7 +69,7 @@ export default function GroupList({ groups, onSelectGroup }) {
                 border: '1.5px solid rgba(16,86,82,0.3)',
                 boxShadow: 'rgba(100,100,111,0.15) 0px 4px 8px -4px',
               }}>
-                👥 {group.members ? group.members.length : 1} membre{(group.members?.length ?? 1) > 1 ? 's' : ''}
+                👥 {group.members?.length ?? 0} membre{(group.members?.length ?? 0) !== 1 ? 's' : ''}
               </span>
             </div>
 

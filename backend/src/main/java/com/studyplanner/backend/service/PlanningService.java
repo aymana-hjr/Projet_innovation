@@ -21,6 +21,7 @@ public class PlanningService {
     private final WeeklyGoalRepository weeklyGoalRepository;
     private final AvailabilitySlotRepository availabilitySlotRepository;
     private final StudySessionRepository studySessionRepository;
+    private final NotificationService notificationService;
 
     private static final int MAX_SESSION_MINUTES = 90;
 
@@ -113,6 +114,8 @@ public class PlanningService {
                     .startDateTime(s.getStartDateTime())
                     .endDateTime(s.getEndDateTime())
                     .isGenerated(s.isGenerated())
+                    .completed(s.isCompleted())
+                    .actualDurationMinutes(s.getActualDurationMinutes())
                     .build());
         }
         return out;
@@ -124,4 +127,50 @@ public class PlanningService {
         while (d.getDayOfWeek() != target) d = d.plusDays(1);
         return d;
     }
+
+    // À ajouter à la fin de la classe PlanningService
+    public StudySessionResponse markSessionAsCompleted(Long sessionId, Integer actualMinutes, String email) {
+    StudySession session = studySessionRepository.findById(sessionId)
+            .orElseThrow(() -> new RuntimeException("Session non trouvée"));
+
+    // Vérifier que la session appartient bien à l'utilisateur
+    if (!session.getUser().getEmail().equals(email)) {
+        throw new RuntimeException("Accès non autorisé");
+    }
+
+    session.setCompleted(true);
+    session.setActualDurationMinutes(actualMinutes);
+    studySessionRepository.save(session);
+
+    // Vérifier si l'objectif hebdomadaire est atteint
+    java.time.LocalDate weekStart = session.getStartDateTime().toLocalDate().with(java.time.DayOfWeek.MONDAY);
+    java.time.LocalDateTime start = weekStart.atStartOfDay();
+    java.time.LocalDateTime end = start.plusDays(7);
+    
+    int totalMinutes = studySessionRepository.findByUserAndStartDateTimeBetween(session.getUser(), start, end).stream()
+            .filter(s -> s.getSubject().getId().equals(session.getSubject().getId()))
+            .filter(StudySession::isCompleted)
+            .mapToInt(s -> s.getActualDurationMinutes() != null ? s.getActualDurationMinutes() : 0)
+            .sum();
+            
+    int goal = weeklyGoalRepository.findBySubject(session.getSubject())
+            .map(WeeklyGoal::getTargetMinutesPerWeek)
+            .orElse(0);
+            
+    if (goal > 0 && totalMinutes >= goal && (totalMinutes - actualMinutes) < goal) {
+        notificationService.createNotification(session.getUser(), 
+            "Félicitations ! Vous avez atteint votre objectif de " + (goal/60) + "h pour " + session.getSubject().getName() + ".", 
+            NotificationType.GOAL_REACHED);
+    }
+
+    return StudySessionResponse.builder()
+            .id(session.getId())
+            .subjectName(session.getSubject().getName())
+            .startDateTime(session.getStartDateTime())
+            .endDateTime(session.getEndDateTime())
+            .completed(true)
+            .actualDurationMinutes(actualMinutes)
+            .build();
+}
+
 }

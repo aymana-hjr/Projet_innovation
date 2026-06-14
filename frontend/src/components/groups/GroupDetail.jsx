@@ -214,7 +214,7 @@ export default function GroupDetail({ group, onBack }) {
                   Aucune session partagée dans ce groupe.
                 </p>
                 <p style={{ fontSize: 11, fontWeight: 600, color: 'rgba(0,0,0,0.28)' }}>
-                  Partagez vos sessions depuis votre planning pour étudier ensemble !
+                  Allez sur le Dashboard → Planning hebdomadaire → bouton « Partager » sur une session.
                 </p>
               </div>
 

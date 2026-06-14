@@ -1,7 +1,7 @@
 import React from 'react';
-import { FiClock, FiBookOpen, FiZap } from 'react-icons/fi';
+import { FiClock, FiBookOpen, FiZap, FiShare2, FiCheckCircle } from 'react-icons/fi';
 
-export default function StudySessionsList({ sessions }) {
+export default function StudySessionsList({ sessions, onShare }) {
   if (!sessions || sessions.length === 0) {
     return (
       <div
@@ -29,6 +29,17 @@ export default function StudySessionsList({ sessions }) {
   const durationMin = (start, end) =>
     Math.round((new Date(end) - new Date(start)) / 60000);
 
+  // Dans StudySessionsList.jsx, ajoute une fonction pour valider
+const handleComplete = async (sessionId) => {
+  const mins = prompt("Combien de minutes avez-vous réellement étudié ?");
+  if (mins) {
+    await fetch(`http://localhost:8080/api/planning/sessions/${sessionId}/complete?actualMinutes=${mins}`, {
+      method: 'PATCH',
+      headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+    });
+    window.location.reload(); // Pour rafraîchir la liste
+  }
+};
   return (
     <div className="flex flex-col gap-3">
       {sessions.map((session) => {
@@ -87,7 +98,7 @@ export default function StudySessionsList({ sessions }) {
               </div>
             </div>
 
-            {/* Droite : badge + date */}
+            {/* Droite : badge + date + partager */}
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 5, flexShrink: 0 }}>
               <span
                 style={{
@@ -103,6 +114,38 @@ export default function StudySessionsList({ sessions }) {
               <span style={{ fontSize: 10, fontWeight: 700, color: 'rgba(0,0,0,0.3)', textTransform: 'capitalize' }}>
                 {formatDate(session.startDateTime)}
               </span>
+              {onShare && (
+                <button
+                  type="button"
+                  onClick={(e) => { e.stopPropagation(); onShare(session); }}
+                  title="Partager dans un groupe"
+                  style={{
+                    display: 'flex', alignItems: 'center', gap: 4,
+                    marginTop: 4, padding: '5px 10px', borderRadius: 8,
+                    background: 'rgba(16,86,82,0.08)', border: '1px solid rgba(16,86,82,0.2)',
+                    color: 'rgb(16,86,82)', fontSize: 10, fontWeight: 800,
+                    cursor: 'pointer', fontFamily: 'inherit',
+                  }}
+                >
+                  <FiShare2 style={{ width: 11, height: 11 }} />
+                  Partager
+                </button>
+              )}
+
+              {/* Bouton de validation */}
+              {!session.completed ? (
+                <button
+                  onClick={() => handleComplete(session.id)}
+                  className="mt-2 px-4 py-2 bg-emerald-600 text-white text-[10px] font-black uppercase tracking-widest rounded-lg hover:bg-emerald-700 transition-all shadow-md active:scale-95"
+                >
+                  Valider la session
+                </button>
+              ) : (
+                <div className="mt-2 flex items-center gap-1 text-emerald-600 font-bold text-[10px] uppercase tracking-widest">
+                  <FiCheckCircle className="w-3 h-3" /> Terminée ({session.actualDurationMinutes} min)
+                </div>
+              )}
+
             </div>
           </div>
         );

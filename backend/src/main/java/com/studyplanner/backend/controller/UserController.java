@@ -30,6 +30,8 @@ public class UserController {
         }
 
         Map<String, Object> response = new HashMap<>();
+        response.put("id", user.getId());
+        response.put("fullName", user.getFullName());
         response.put("email", email);
         response.put("authorities", authentication.getAuthorities());
         response.put("collaborationCode", user.getCollaborationCode());

@@ -4,6 +4,7 @@ import lombok.Builder;
 import lombok.Getter;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Getter
 @Builder
@@ -14,4 +15,5 @@ public class GroupResponse {
     private Long ownerId;
     private String ownerEmail;
     private LocalDateTime createdAt;
+    private List<GroupMemberResponse> members;
 }

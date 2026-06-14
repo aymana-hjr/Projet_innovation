@@ -14,4 +14,6 @@ public class StudySessionResponse {
     private LocalDateTime startDateTime;
     private LocalDateTime endDateTime;
     private boolean isGenerated;
+    private boolean completed;
+    private Integer actualDurationMinutes;
 }

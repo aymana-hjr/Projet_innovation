@@ -15,4 +15,8 @@ public interface GroupInvitationRepository extends JpaRepository<GroupInvitation
     Optional<GroupInvitation> findByGroupAndReceiverAndStatus(
             StudyGroup group, User receiver, InvitationStatus status
     );
+
+    List<GroupInvitation> findBySender(User sender);
+    List<GroupInvitation> findByReceiver(User receiver);
+    List<GroupInvitation> findByGroup(StudyGroup group);
 }

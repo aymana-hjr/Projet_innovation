@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { taskService } from '../services/taskService';
 import { planningService } from '../services/planningService';
+import { userService } from '../services/userService';
 
 import TaskStats from '../components/tasks/TaskStats';
 import TaskFilters from '../components/tasks/TaskFilters';
@@ -9,8 +10,11 @@ import TaskList from '../components/tasks/TaskList';
 import TaskForm from '../components/tasks/TaskForm';
 import StudySessionsList from '../components/tasks/StudySessionsList';
 import PlanningConfigModal from '../components/tasks/PlanningConfigModal';
+import ShareSessionModal from '../components/groups/ShareSessionModal';
 
-import { FiPlus, FiAlertCircle, FiLoader, FiLogOut, FiCalendar, FiCpu, FiSettings, FiUsers } from 'react-icons/fi';
+import { FiPlus, FiAlertCircle, FiLoader, FiLogOut, FiCalendar, FiCpu, FiSettings, FiUsers , FiTrendingUp, FiShield } from 'react-icons/fi';
+import NotificationBell from '../components/notifications/NotificationBell';
+
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -26,6 +30,8 @@ export default function Dashboard() {
   const [sessions, setSessions] = useState([]);
   const [isPlanningLoading, setIsPlanningLoading] = useState(false);
   const [isConfigOpen, setIsConfigOpen] = useState(false);
+  const [shareSession, setShareSession] = useState(null);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   // Helper pour obtenir le lundi cible (cette semaine, ou la suivante si on est le week-end)
   const formatLocalDateYYYYMMDD = (date) => {
@@ -38,7 +44,7 @@ export default function Dashboard() {
   const getMonday = (d) => {
     const date = new Date(d);
     const day = date.getDay(); // 0 is Sunday, 6 is Saturday
-    
+
     // Si on est Samedi (6) ou Dimanche (0), on vise le lundi suivant
     // Sinon on prend le lundi de la semaine en cours
     let diff;
@@ -49,7 +55,7 @@ export default function Dashboard() {
     } else {
       diff = 1 - day; // Lundi passé ou aujourd'hui
     }
-    
+
     const target = new Date(date);
     target.setDate(date.getDate() + diff);
     // IMPORTANT: ne pas utiliser toISOString() (UTC) sinon décalage possible d'un jour.
@@ -85,6 +91,12 @@ export default function Dashboard() {
     if (!token) { navigate('/login'); return; }
     fetchTasks();
     fetchSessions();
+    userService.getMe()
+      .then((me) => {
+        const admin = me?.authorities?.some((a) => (a.authority || a) === 'ROLE_ADMIN');
+        setIsAdmin(!!admin);
+      })
+      .catch(() => {});
   }, [navigate, fetchTasks, fetchSessions]);
 
   const handleGeneratePlan = async () => {
@@ -212,8 +224,33 @@ export default function Dashboard() {
               </div>
             </div>
 
+            <button
+              onClick={() => navigate('/analytics')}
+              className="group relative flex items-center gap-2 px-4 py-2 rounded-xl hover:bg-indigo-50 transition-colors"
+            >
+              <FiTrendingUp className="relative w-4 h-4 text-indigo-600 group-hover:scale-110 transition-transform" />
+              <span className="relative text-sm font-bold text-indigo-700 hidden sm:block">
+                Analyses
+              </span>
+            </button>
+
+            {isAdmin && (
+              <button
+                onClick={() => navigate('/admin')}
+                className="group relative flex items-center gap-2 px-4 py-2 rounded-xl hover:bg-amber-50 transition-colors"
+              >
+                <FiShield className="relative w-4 h-4 text-amber-600 group-hover:scale-110 transition-transform" />
+                <span className="relative text-sm font-bold text-amber-700 hidden sm:block">
+                  Admin
+                </span>
+              </button>
+            )}
+
+
             {/* Action Section */}
             <div className="flex items-center gap-6">
+              <NotificationBell />
+
               <button
                 onClick={() => navigate('/groups')}
                 className="group relative flex items-center gap-2 px-4 py-2 rounded-xl hover:bg-emerald-50 transition-colors"
@@ -328,7 +365,7 @@ export default function Dashboard() {
 
         {/* Composants */}
         <div className="animate-in fade-in slide-in-from-bottom-4 duration-700 space-y-12">
-          
+
           <TaskStats tasks={tasks} />
 
           {/* ── Section Planning Hebdomadaire ── */}
@@ -355,7 +392,7 @@ export default function Dashboard() {
                   <FiSettings className="w-6 h-6" />
                 </button>
 
-                <button 
+                <button
                   onClick={handleGeneratePlan}
                   disabled={isPlanningLoading}
                   className="flex items-center gap-3 px-6 py-4 bg-indigo-600 text-white rounded-2xl font-black text-sm uppercase tracking-widest hover:bg-indigo-700 transition-all shadow-lg hover:shadow-indigo-500/30 disabled:opacity-50"
@@ -366,9 +403,9 @@ export default function Dashboard() {
               </div>
             </div>
 
-            <StudySessionsList sessions={sessions} />
+            <StudySessionsList sessions={sessions} onShare={(session) => setShareSession(session)} />
           </section>
-          
+
           <div className="space-y-6">
             <div className="flex items-center gap-3 ml-2">
               <div className="w-2 h-8 bg-emerald-500 rounded-full"></div>
@@ -380,6 +417,12 @@ export default function Dashboard() {
         </div>
 
       </main>
+
+      <ShareSessionModal
+        session={shareSession}
+        isOpen={!!shareSession}
+        onClose={() => setShareSession(null)}
+      />
 
       {/* Modal Planning Config */}
       <PlanningConfigModal

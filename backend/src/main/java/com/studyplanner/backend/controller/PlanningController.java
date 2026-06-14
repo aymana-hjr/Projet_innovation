@@ -26,4 +26,11 @@ public class PlanningController {
     public List<StudySessionResponse> sessions(@RequestParam LocalDate weekStart, Principal principal) {
         return planningService.getWeekSessions(principal.getName(), weekStart);
     }
+    @PatchMapping("/sessions/{id}/complete")
+    public StudySessionResponse completeSession(
+        @PathVariable Long id, 
+        @RequestParam Integer actualMinutes, 
+        Principal principal) {
+    return planningService.markSessionAsCompleted(id, actualMinutes, principal.getName());
+}
 }

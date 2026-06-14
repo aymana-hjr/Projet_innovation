@@ -9,6 +9,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.LinkedHashMap;
+import java.util.stream.Stream;
 
 @Service
 @RequiredArgsConstructor
@@ -20,7 +22,8 @@ public class GroupService {
     private final GroupMemberRepository groupMemberRepository;
     private final GroupInvitationRepository groupInvitationRepository;
     private final SharedSessionRepository sharedSessionRepository;
-    private final StudySessionRepository studySessionRepository; // de la partie 2.2
+    private final StudySessionRepository studySessionRepository;
+    private final NotificationService notificationService;
 
     public GroupResponse createGroup(String email, CreateGroupRequest request) {
         User owner = getUserByEmail(email);
@@ -45,13 +48,19 @@ public class GroupService {
         return toGroupResponse(group);
     }
 
-    @Transactional(readOnly = true)
     public List<GroupResponse> getMyGroups(String email) {
         User user = getUserByEmail(email);
 
-        return groupMemberRepository.findByUser(user).stream()
-                .map(GroupMember::getGroup)
-                .distinct()
+        Stream<StudyGroup> fromMembership = groupMemberRepository.findByUser(user).stream()
+                .map(GroupMember::getGroup);
+        Stream<StudyGroup> fromOwnership = studyGroupRepository.findByOwner(user).stream();
+
+        return Stream.concat(fromMembership, fromOwnership)
+                .collect(LinkedHashMap<Long, StudyGroup>::new,
+                        (map, g) -> map.putIfAbsent(g.getId(), g),
+                        LinkedHashMap::putAll)
+                .values().stream()
+                .peek(this::ensureOwnerMembershipIfMissing)
                 .map(this::toGroupResponse)
                 .toList();
     }
@@ -64,7 +73,7 @@ public class GroupService {
 
         ensureGroupMember(group, sender);
 
-        if (groupMemberRepository.existsByGroupAndUser(group, receiver)) {
+        if (groupMemberRepository.existsByGroupIdAndUserId(group.getId(), receiver.getId())) {
             throw new RuntimeException("User is already a member of this group");
         }
 
@@ -80,6 +89,13 @@ public class GroupService {
                 .build();
 
         invitation = groupInvitationRepository.save(invitation);
+
+        notificationService.createNotification(
+            receiver,
+            "Vous avez été invité au groupe '" + group.getName() + "' par " + sender.getFullName() + ".",
+            NotificationType.INVITE
+        );
+
         return toInvitationResponse(invitation);
     }
 
@@ -100,7 +116,8 @@ public class GroupService {
         invitation.setStatus(InvitationStatus.ACCEPTED);
         groupInvitationRepository.save(invitation);
 
-        if (!groupMemberRepository.existsByGroupAndUser(invitation.getGroup(), currentUser)) {
+        if (!groupMemberRepository.existsByGroupIdAndUserId(
+                invitation.getGroup().getId(), currentUser.getId())) {
             GroupMember member = GroupMember.builder()
                     .group(invitation.getGroup())
                     .user(currentUser)
@@ -161,7 +178,6 @@ public class GroupService {
         return toSharedSessionResponse(sharedSession);
     }
 
-    @Transactional(readOnly = true)
     public List<SharedSessionResponse> getGroupSharedSessions(String email, Long groupId) {
         User currentUser = getUserByEmail(email);
         StudyGroup group = getGroupById(groupId);
@@ -194,12 +210,38 @@ public class GroupService {
     }
 
     private void ensureGroupMember(StudyGroup group, User user) {
-        if (!groupMemberRepository.existsByGroupAndUser(group, user)) {
-            throw new RuntimeException("Access denied: you are not a member of this group");
+        if (groupMemberRepository.existsByGroupIdAndUserId(group.getId(), user.getId())) {
+            return;
+        }
+        if (group.getOwner().getId().equals(user.getId())) {
+            ensureOwnerMembershipIfMissing(group);
+            return;
+        }
+        throw new RuntimeException("Access denied: you are not a member of this group");
+    }
+
+    private void ensureOwnerMembershipIfMissing(StudyGroup group) {
+        User owner = group.getOwner();
+        if (!groupMemberRepository.existsByGroupIdAndUserId(group.getId(), owner.getId())) {
+            groupMemberRepository.save(GroupMember.builder()
+                    .group(group)
+                    .user(owner)
+                    .role(GroupRole.OWNER)
+                    .joinedAt(LocalDateTime.now())
+                    .build());
         }
     }
 
     private GroupResponse toGroupResponse(StudyGroup g) {
+        List<GroupMemberResponse> members = groupMemberRepository.findByGroup(g).stream()
+                .map(m -> GroupMemberResponse.builder()
+                        .id(m.getUser().getId())
+                        .username(m.getUser().getFullName())
+                        .email(m.getUser().getEmail())
+                        .role(m.getRole())
+                        .build())
+                .toList();
+
         return GroupResponse.builder()
                 .id(g.getId())
                 .name(g.getName())
@@ -207,6 +249,7 @@ public class GroupService {
                 .ownerId(g.getOwner().getId())
                 .ownerEmail(g.getOwner().getEmail())
                 .createdAt(g.getCreatedAt())
+                .members(members)
                 .build();
     }
 
@@ -225,13 +268,21 @@ public class GroupService {
     }
 
     private SharedSessionResponse toSharedSessionResponse(SharedSession s) {
+        StudySession studySession = s.getStudySession();
+        String subjectName = studySession.getSubject().getName();
+
         return SharedSessionResponse.builder()
                 .id(s.getId())
                 .groupId(s.getGroup().getId())
-                .studySessionId(s.getStudySession().getId())
+                .studySessionId(studySession.getId())
                 .sharedByUserId(s.getSharedByUser().getId())
                 .sharedByEmail(s.getSharedByUser().getEmail())
+                .sharedByUsername(s.getSharedByUser().getFullName())
                 .sharedAt(s.getSharedAt())
+                .subject(subjectName)
+                .taskTitle(subjectName)
+                .startTime(studySession.getStartDateTime())
+                .endTime(studySession.getEndDateTime())
                 .build();
     }
 }

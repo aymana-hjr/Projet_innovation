@@ -13,5 +13,10 @@ public class SharedSessionResponse {
     private Long studySessionId;
     private Long sharedByUserId;
     private String sharedByEmail;
+    private String sharedByUsername;
     private LocalDateTime sharedAt;
+    private String subject;
+    private String taskTitle;
+    private LocalDateTime startTime;
+    private LocalDateTime endTime;
 }

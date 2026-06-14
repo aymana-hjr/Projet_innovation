@@ -52,8 +52,8 @@ export default function GroupsPage() {
   const handleLogout = () => { localStorage.removeItem('token'); navigate('/login'); };
   const goToDashboard = () => { navigate('/dashboard'); };
 
-  const handleGroupCreated = (newGroup) => {
-    setGroups([...groups, newGroup]);
+  const handleGroupCreated = () => {
+    fetchData();
   };
 
   const handleAcceptInvitation = async (invitationId) => {

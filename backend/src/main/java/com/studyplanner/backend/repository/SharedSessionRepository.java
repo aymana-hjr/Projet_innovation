@@ -9,5 +9,6 @@ import java.util.List;
 
 public interface SharedSessionRepository extends JpaRepository<SharedSession, Long> {
     List<SharedSession> findByGroup(StudyGroup group);
+    List<SharedSession> findByStudySession(StudySession studySession);
     boolean existsByGroupAndStudySession(StudyGroup group, StudySession studySession);
 }
