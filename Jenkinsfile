@@ -3,11 +3,22 @@ pipeline {
 
     stages { 
 
-        stage('Checkout') { 
-            steps { 
-                git branch: 'main', url: 'https://github.com/aymana-hjr/Projet_innovation.git' 
-            } 
+        stage('Checkout') {
+    steps {
+        retry(3) {
+            checkout scmGit(
+                branches: [[name: '*/main']],
+                extensions: [
+                    cloneOption(depth: 1, shallow: true, timeout: 60)
+                ],
+                userRemoteConfigs: [[
+                    url: 'git@github.com:aymana-hjr/Projet_innovation.git',
+                    credentialsId: 'github-ssh'
+                ]]
+            )
         }
+    }
+}
         stage('Build & Push Docker Images') {
             steps {
                 withCredentials([usernamePassword(
