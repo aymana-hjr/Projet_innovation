@@ -3,6 +3,7 @@ package com.studyplanner.backend.controller;
 import com.studyplanner.backend.dto.AuthResponse;
 import com.studyplanner.backend.dto.LoginRequest;
 import com.studyplanner.backend.dto.RegisterRequest;
+import com.studyplanner.backend.dto.VerificationRequest;
 import com.studyplanner.backend.service.AuthService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -10,6 +11,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -27,5 +29,16 @@ public class AuthController {
     @PostMapping("/login")
     public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginRequest request){
         return ResponseEntity.ok(authService.login(request));
+    }
+
+    @PostMapping("/verify-2fa")
+    public ResponseEntity<AuthResponse> verify2FA(@Valid @RequestBody VerificationRequest request){
+        return ResponseEntity.ok(authService.verifyCode(request));
+    }
+
+    @PostMapping("/resend-2fa")
+    public ResponseEntity<Void> resend2FA(@RequestParam String email){
+        authService.resendVerificationCode(email);
+        return ResponseEntity.ok().build();
     }
 }

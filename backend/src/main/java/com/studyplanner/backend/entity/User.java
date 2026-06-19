@@ -35,6 +35,13 @@ public class User {
     @Column(name = "collaboration_code", unique = true, length = 8)
     private String collaborationCode;
 
+    @Column(name = "verification_code", length = 6)
+    private String verificationCode;
+
+    @Column(name = "verification_code_expiry")
+    private LocalDateTime verificationCodeExpiry;
+
+
     @PrePersist
     protected void onCreate() {
         if (this.collaborationCode == null) {
