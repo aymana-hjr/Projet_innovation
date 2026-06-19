@@ -8,13 +8,19 @@ pipeline {
                 git branch: 'main', url: 'https://github.com/aymana-hjr/Projet_innovation.git' 
             } 
         }
-        stage('Build & Push Docker Images'){
+        stage('Build & Push Docker Images') {
             steps {
+                withCredentials([usernamePassword(
+                credentialsId: 'docker-hub-credentials',
+                usernameVariable: 'DOCKER_USER',
+                passwordVariable: 'DOCKER_PASS'
+            )]) {
                 sh 'docker compose build --no-cache'
-                sh 'docker login -u $DOCKER_USER -p $DOCKER_PASS'
+                sh 'echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin'
                 sh 'docker compose push'
-            }
         }
+    }
+}  
         stage('Deploy') {
             steps {
                 sh 'docker compose down'
