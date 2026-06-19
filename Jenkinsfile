@@ -35,12 +35,14 @@ pipeline {
 
 
         
-        stage('Deploy') {
-            steps {
-                sh '$COMPOSE down || true'
-                sh '$COMPOSE up -d'
-            }
-        }
+       stage('Deploy') {
+    steps {
+        sh 'docker stop mysql backend frontend || true'
+        sh 'docker rm mysql backend frontend || true'
+        sh '/usr/local/bin/docker-compose down || true'
+        sh '/usr/local/bin/docker-compose up -d'
+    }
+}
 
         
 
