@@ -1,5 +1,10 @@
 pipeline {
     agent any 
+    
+    environment {
+        COMPOSE = '/usr/local/bin/docker-compose'
+    }
+
 
     stages { 
 
@@ -32,8 +37,8 @@ pipeline {
         
         stage('Deploy') {
             steps {
-                sh 'docker compose down || true'
-                sh 'docker compose up -d'
+                sh '$COMPOSE down || true'
+                sh '$COMPOSE up -d'
             }
         }
 
