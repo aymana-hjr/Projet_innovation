@@ -1,4 +1,4 @@
-const API_URL = 'http://localhost:8080/api/notifications';
+const API_URL = `${import.meta.env.VITE_API_URL || ''}/api/notifications`;
 
 const getHeaders = () => ({
   'Authorization': `Bearer ${localStorage.getItem('token')}`,

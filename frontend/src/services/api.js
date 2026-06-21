@@ -1,4 +1,4 @@
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api';
+const API_BASE_URL = import.meta.env.VITE_API_URL || '';
 
 // Fonction wrapper pour gérer automatiquement le token et les erreurs
 export const fetchApi = async (endpoint, options = {}) => {
@@ -15,7 +15,7 @@ export const fetchApi = async (endpoint, options = {}) => {
     headers,
   };
 
-  const response = await fetch(`${API_BASE_URL}${endpoint}`, config);
+  const response = await fetch(`${API_BASE_URL}/api${endpoint}`, config);
 
     // Gestion de l'expiration du token / auth invalide
     if (response.status === 401 || response.status === 403) {

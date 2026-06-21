@@ -11,6 +11,7 @@ import {
 } from 'react-icons/fi';
 
 export default function LoginPage() {
+  const apiUrl = import.meta.env.VITE_API_URL || '';
   const [formData, setFormData] = useState({ email: '', password: '' });
   const [errors, setErrors] = useState({ email: '', password: '' });
   const [showPassword, setShowPassword] = useState(false);
@@ -112,7 +113,7 @@ export default function LoginPage() {
     setGlobalError('');
 
     try {
-      const response = await fetch('http://localhost:8080/api/auth/login', {
+      const response = await fetch(`${apiUrl}/api/auth/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -157,7 +158,7 @@ export default function LoginPage() {
     setGlobalError('');
 
     try {
-      const response = await fetch('http://localhost:8080/api/auth/verify-2fa', {
+      const response = await fetch(`${apiUrl}/api/auth/verify-2fa`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -192,7 +193,7 @@ export default function LoginPage() {
     setIsLoading(true);
     setGlobalError('');
     try {
-      const response = await fetch(`http://localhost:8080/api/auth/resend-2fa?email=${encodeURIComponent(formData.email)}`, {
+      const response = await fetch(`${apiUrl}/api/auth/resend-2fa?email=${encodeURIComponent(formData.email)}`, {
         method: 'POST',
       });
       if (!response.ok) {

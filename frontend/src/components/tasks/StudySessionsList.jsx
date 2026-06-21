@@ -2,6 +2,7 @@ import React from 'react';
 import { FiClock, FiBookOpen, FiZap, FiShare2, FiCheckCircle } from 'react-icons/fi';
 
 export default function StudySessionsList({ sessions, onShare }) {
+  const apiUrl = import.meta.env.VITE_API_URL || '';
   if (!sessions || sessions.length === 0) {
     return (
       <div
@@ -33,7 +34,7 @@ export default function StudySessionsList({ sessions, onShare }) {
 const handleComplete = async (sessionId) => {
   const mins = prompt("Combien de minutes avez-vous réellement étudié ?");
   if (mins) {
-    await fetch(`http://localhost:8080/api/planning/sessions/${sessionId}/complete?actualMinutes=${mins}`, {
+    await fetch(`${apiUrl}/api/planning/sessions/${sessionId}/complete?actualMinutes=${mins}`, {
       method: 'PATCH',
       headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
     });

@@ -26,7 +26,7 @@ public class DataInitializer implements CommandLineRunner {
     @Value("${app.admin.bootstrap-email:admin@studyplanner.com}")
     private String adminEmail;
 
-    @Value("${app.admin.bootstrap-password:Admin123!}")
+    @Value("${app.admin.bootstrap-password}")
     private String adminPassword;
 
     @Override

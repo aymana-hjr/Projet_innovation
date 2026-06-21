@@ -12,6 +12,7 @@ import {
 } from 'react-icons/fi';
 
 export default function RegisterPage() {
+  const apiUrl = import.meta.env.VITE_API_URL || '';
   const [formData, setFormData] = useState({ fullName: '', email: '', password: '', confirmPassword: '' });
   const [errors, setErrors] = useState({ fullName: '', email: '', password: '', confirmPassword: '' });
   const [showPassword, setShowPassword] = useState(false);
@@ -76,7 +77,7 @@ export default function RegisterPage() {
     setGlobalError('');
 
     try {
-      const response = await fetch('http://localhost:8080/api/auth/register', {
+      const response = await fetch(`${apiUrl}/api/auth/register`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
